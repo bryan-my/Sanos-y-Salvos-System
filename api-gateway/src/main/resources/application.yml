@@ -14,8 +14,15 @@ spring:
           uri: lb://MS-USUARIOS # "lb" usa el Load Balancer de Eureka
           predicates:
             - Path=/api/usuarios/** # Todo lo que empiece así se va a Usuarios
+        - id: auth-service
+          uri: lb://AUTH-SERVICE # Ruta para el servicio de autenticación
+          predicates:
+            - Path=/api/auth/** # Todo lo que empiece así se va al auth-service
 
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+
+jwt:
+  secret: SanosYSalvos_Super_Secret_Key_2026_Duoc_Technical_Project
