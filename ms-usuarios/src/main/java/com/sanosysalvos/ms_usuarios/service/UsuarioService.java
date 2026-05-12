@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import  java.util.List;
 import com.sanosysalvos.ms_usuarios.dto.UsuarioDTO;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestTemplate;
 
 
 
@@ -20,6 +22,12 @@ public class UsuarioService {
 
     @Autowired
     private ModelMapper modelMapper; // <--- AGREGAR ESTO para quitar los errores de modelMapper
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Value("${mascotas.service.url}")
+    private String mascotasServiceUrl;
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -47,5 +55,17 @@ public class UsuarioService {
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
             
         return modelMapper.map(usuario, UsuarioDTO.class);
+    }
+
+    public void eliminarUsuario(Long id) {
+        if (!usuarioRepository.existsById(id)) {
+            throw new RuntimeException("Usuario no encontrado");
+        }
+        try {
+            restTemplate.delete(mascotasServiceUrl + "/api/mascotas/usuario/" + id);
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudieron eliminar las mascotas del usuario");
+        }
+        usuarioRepository.deleteById(id);
     }
 }

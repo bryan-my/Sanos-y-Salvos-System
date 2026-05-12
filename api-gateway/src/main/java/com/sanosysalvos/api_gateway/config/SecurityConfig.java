@@ -9,7 +9,12 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import javax.crypto.spec.SecretKeySpec;
+import java.util.List;
 
 
 @Configuration
@@ -27,12 +32,28 @@ public class SecurityConfig {
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers("/api/usuarios/registro").permitAll() // Permitir registro
                 .pathMatchers("/api/auth/**").permitAll()           // Permitir login
+                .pathMatchers(HttpMethod.GET, "/api/mascotas/lista").permitAll()
+                .pathMatchers(HttpMethod.GET, "/api/mascotas/*").permitAll()
                 .anyExchange().authenticated()                      // Todo lo demás requiere JWT
             )
+            .cors(Customizer.withDefaults())
             // 2. Aquí es donde usamos el decodificador que crearemos abajo
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     // 3. EL BEAN QUE FALTA: Este es el "traductor" de tokens

@@ -51,4 +51,10 @@ public class MascotaController {
         mascotaService.eliminarMascota(id);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/usuario/{idUsuario}")
+    public ResponseEntity<Void> eliminarPorUsuario(@PathVariable Long idUsuario) {
+        mascotaService.eliminarPorUsuario(idUsuario);
+        return ResponseEntity.noContent().build();
+    }
 }

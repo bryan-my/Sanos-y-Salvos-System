@@ -79,4 +79,8 @@ public class MascotaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con id: " + id));
         mascotaRepository.delete(mascota);
     }
+
+    public void eliminarPorUsuario(Long idUsuario) {
+        mascotaRepository.deleteByIdUsuario(idUsuario);
+    }
 }

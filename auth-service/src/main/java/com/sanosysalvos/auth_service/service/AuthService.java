@@ -18,7 +18,13 @@ public class AuthService {
     public TokenDto login(AuthDto dto) {
         UsuarioDto usuario = userFeignClient.findByEmail(dto.getEmail());
         if (usuario != null && passwordEncoder.matches(dto.getPassword(), usuario.getPassword())) {
-            return new TokenDto(jwtProvider.createToken(usuario));
+            return TokenDto.builder()
+                .token(jwtProvider.createToken(usuario))
+                .userId(usuario.getId())
+                .nombreCompleto(usuario.getNombreCompleto())
+                .email(usuario.getEmail())
+                .rol(usuario.getRol())
+                .build();
         }
         throw new RuntimeException("Credenciales incorrectas");
     }

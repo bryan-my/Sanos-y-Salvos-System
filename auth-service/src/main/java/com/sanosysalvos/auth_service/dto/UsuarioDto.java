@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 @Data @NoArgsConstructor @AllArgsConstructor
 public class UsuarioDto {
     private Long id;
+    private String nombreCompleto;
     private String email;
     private String password;
     private String rol;

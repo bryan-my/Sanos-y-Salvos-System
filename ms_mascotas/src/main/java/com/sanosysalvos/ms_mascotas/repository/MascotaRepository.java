@@ -10,4 +10,5 @@ import java.util.List;
 public interface MascotaRepository extends JpaRepository<Mascota, Long> {
     List<Mascota> findByIdUsuario(Long idUsuario);
     List<Mascota> findByEstado(EstadoMascota estado);
+    void deleteByIdUsuario(Long idUsuario);
 }
