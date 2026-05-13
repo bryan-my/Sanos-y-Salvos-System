@@ -194,9 +194,3 @@ En `api-gateway/` (8080):
 ```bash
 ./mvnw spring-boot:run
 ```
-
-## Notas del repo
-
-- No hay un build “monorepo” central: cada servicio es un proyecto Maven independiente (con su propio `mvnw`).
-- `ms-usuarios` borra mascotas asociadas al eliminar un usuario llamando a `ms-mascotas` por URL directa configurada en `mascotas.service.url` (no por Eureka).
-- Ojo con las versiones: `api-gateway` usa Spring Boot `3.2.5` mientras que `eurekaserver`, `ms-usuarios`, `ms_mascotas` y `auth-service` declaran Spring Boot `4.0.6` en sus `pom.xml`.
