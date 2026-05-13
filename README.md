@@ -195,50 +195,6 @@ En `api-gateway/` (8080):
 ./mvnw spring-boot:run
 ```
 
-## Ejemplos (cURL)
-
-### Registro
-
-```bash
-curl -X POST "http://localhost:8080/api/usuarios/registro" -H "Content-Type: application/json" -d "{\"nombreCompleto\":\"Juan Perez\",\"email\":\"juan@test.com\",\"password\":\"1234\",\"telefono\":\"123\",\"direccion\":\"Calle 123\",\"rol\":\"USER\"}"
-```
-
-### Login
-
-```bash
-curl -X POST "http://localhost:8080/api/auth/login" -H "Content-Type: application/json" -d "{\"email\":\"juan@test.com\",\"password\":\"1234\"}"
-```
-
-El response devuelve `token` y datos del usuario.
-
-### Crear mascota (requiere JWT)
-
-```bash
-curl -X POST "http://localhost:8080/api/mascotas" -H "Content-Type: application/json" -H "Authorization: Bearer <PEGAR_TOKEN_ACA>" -d "{\"nombre\":\"Luna\",\"especie\":\"Perro\",\"color\":\"Marron\",\"tamaño\":\"Mediano\",\"estado\":\"PERDIDA\",\"idUsuario\":1}"
-```
-
-### Listar mascotas (público)
-
-```bash
-curl "http://localhost:8080/api/mascotas/lista"
-```
-
-## Comandos útiles (por servicio)
-
-En cualquiera de las carpetas de servicio:
-
-```bash
-./mvnw clean test
-./mvnw clean package
-```
-
-En Windows (PowerShell):
-
-```powershell
-.\mvnw.cmd clean test
-.\mvnw.cmd clean package
-```
-
 ## Notas del repo
 
 - No hay un build “monorepo” central: cada servicio es un proyecto Maven independiente (con su propio `mvnw`).
