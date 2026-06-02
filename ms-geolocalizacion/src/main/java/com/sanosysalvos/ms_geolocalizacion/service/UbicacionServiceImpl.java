@@ -24,7 +24,6 @@ public class UbicacionServiceImpl implements UbicacionService {
     public UbicacionDTO registrar(UbicacionDTO dto) {
         Ubicacion ubicacion = modelMapper.map(dto, Ubicacion.class);
         
-        // ---> SOLUCIÓN: Asignamos la fecha actual antes de enviarlo a PostgreSQL
         ubicacion.setFechaRegistro(LocalDateTime.now());
         
         Ubicacion guardada = ubicacionRepository.save(ubicacion);
