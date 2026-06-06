@@ -57,6 +57,29 @@ services:
     networks:
       - sanosysalvos-net
 
+  db-reportes:
+    image: postgres:15
+    container_name: db-reportes
+    environment:
+      POSTGRES_USER: user_sanos
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: db_reportes
+    ports:
+      - "5437:5432"
+    volumes:
+      - vol-reportes:/var/lib/postgresql/data
+    networks:
+      - sanosysalvos-net
+
+  rabbitmq-sanos:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-sanos
+    ports:
+      - "5672:5672"   
+      - "15672:15672" 
+    networks:
+      - sanosysalvos-net
+
 networks:
   sanosysalvos-net:
     driver: bridge
@@ -66,3 +89,4 @@ volumes:
   vol-mascotas:
   vol-geo:
   vol-coincidencias:
+  vol-reportes:
