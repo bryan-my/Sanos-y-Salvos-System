@@ -80,6 +80,37 @@ services:
     networks:
       - sanosysalvos-net
 
+  # --- INFRAESTRUCTURA DE SONARQUBE ---
+  db-sonarqube:
+    image: postgres:16-alpine
+    container_name: db-sonarqube
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar_password_1234
+      POSTGRES_DB: sonar
+    volumes:
+      - sonar-db-data:/var/lib/postgresql/data
+    networks:
+      - sanosysalvos-net
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube
+    depends_on:
+      - db-sonarqube
+    environment:
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar_password_1234
+      SONAR_JDBC_URL: jdbc:postgresql://db-sonarqube:5432/sonar
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonar-data:/opt/sonarqube/data
+      - sonar-extensions:/opt/sonarqube/extensions
+      - sonar-logs:/opt/sonarqube/logs
+    networks:
+      - sanosysalvos-net
+
 networks:
   sanosysalvos-net:
     driver: bridge
@@ -90,3 +121,7 @@ volumes:
   vol-geo:
   vol-coincidencias:
   vol-reportes:
+  sonar-db-data:
+  sonar-data:
+  sonar-extensions:
+  sonar-logs:
