@@ -34,6 +34,9 @@ public class SecurityConfig {
                 .pathMatchers("/api/auth/**").permitAll()           // Permitir login
                 .pathMatchers(HttpMethod.GET, "/api/mascotas/lista").permitAll()
                 .pathMatchers(HttpMethod.GET, "/api/mascotas/*").permitAll()
+                .pathMatchers(HttpMethod.GET, "/api/geolocalizacion/mapa").permitAll()     // Permite dibujar el mapa
+                .pathMatchers(HttpMethod.POST, "/api/reportes/avistamiento").permitAll()
+                .pathMatchers(HttpMethod.GET, "/api/reportes/recientes").permitAll()
                 .anyExchange().authenticated()                      // Todo lo demás requiere JWT
             )
             .cors(Customizer.withDefaults())
