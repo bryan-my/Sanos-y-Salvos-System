@@ -17,8 +17,11 @@ import java.util.List;
 @RequestMapping("/api/coincidencias")
 public class MatchController {
 
-    @Autowired
-    private MatchService matchService;
+    private final MatchService matchService;
+
+    public MatchController(MatchService matchService) {
+        this.matchService = matchService;
+    }
 
     @GetMapping("/pendientes")
     public ResponseEntity<List<MatchDTO>> listarPendientes() {
