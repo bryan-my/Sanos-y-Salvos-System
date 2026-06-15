@@ -15,11 +15,13 @@ import java.util.stream.Collectors;
 @Service
 public class MascotaService {
 
-    @Autowired
-    private MascotaRepository mascotaRepository;
+    private final MascotaRepository mascotaRepository;
+    private final ModelMapper modelMapper;
 
-    @Autowired
-    private ModelMapper modelMapper;
+    public MascotaService(MascotaRepository mascotaRepository, ModelMapper modelMapper) {
+        this.mascotaRepository = mascotaRepository;
+        this.modelMapper = modelMapper;
+    }
 
     public MascotaDTO crearMascota(MascotaDTO dto) {
         Mascota mascota = modelMapper.map(dto, Mascota.class);

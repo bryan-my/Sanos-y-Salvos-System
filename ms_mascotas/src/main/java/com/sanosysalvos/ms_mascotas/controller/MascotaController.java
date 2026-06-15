@@ -13,8 +13,11 @@ import java.util.List;
 @RequestMapping("/api/mascotas")
 public class MascotaController {
 
-    @Autowired
-    private MascotaService mascotaService;
+    private final MascotaService mascotaService;
+
+    public MascotaController(MascotaService mascotaService) {
+        this.mascotaService = mascotaService;
+    }
 
     @PostMapping
     public ResponseEntity<MascotaDTO> crearMascota(@RequestBody MascotaDTO mascotaDTO) {
