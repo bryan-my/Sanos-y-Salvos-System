@@ -12,6 +12,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,6 +32,9 @@ public class AvistamientoServiceImplTest {
 
     @InjectMocks
     private AvistamientoServiceImpl avistamientoService;
+
+    
+    private final LocalDateTime fechaFija = LocalDateTime.of(2026, Month.JUNE, 15, 12, 0);
 
     @BeforeEach
     public void setUp() {
@@ -55,7 +59,7 @@ public class AvistamientoServiceImplTest {
         avistamiento.setLongitud(-74.0060);
         avistamiento.setNombreReportador("Juan Pérez");
         avistamiento.setTelefonoContacto("123456789");
-        avistamiento.setFechaReporte(LocalDateTime.now());
+        avistamiento.setFechaReporte(fechaFija);
 
         Avistamiento guardado = new Avistamiento();
         guardado.setId(1L);
@@ -65,7 +69,7 @@ public class AvistamientoServiceImplTest {
         guardado.setLongitud(-74.0060);
         guardado.setNombreReportador("Juan Pérez");
         guardado.setTelefonoContacto("123456789");
-        guardado.setFechaReporte(LocalDateTime.now());
+        guardado.setFechaReporte(fechaFija);
 
         AvistamientoDTO guardadoDto = new AvistamientoDTO();
         guardadoDto.setId(1L);
@@ -75,16 +79,16 @@ public class AvistamientoServiceImplTest {
         guardadoDto.setLongitud(-74.0060);
         guardadoDto.setNombreReportador("Juan Pérez");
         guardadoDto.setTelefonoContacto("123456789");
-        guardadoDto.setFechaReporte(LocalDateTime.now());
+        guardadoDto.setFechaReporte(fechaFija);
 
         when(modelMapper.map(dto, Avistamiento.class)).thenReturn(avistamiento);
         when(avistamientoRepository.save(avistamiento)).thenReturn(guardado);
         when(modelMapper.map(guardado, AvistamientoDTO.class)).thenReturn(guardadoDto);
 
-        // Act
+     
         AvistamientoDTO resultado = avistamientoService.crear(dto);
 
-        // Assert
+       
         assertNotNull(resultado);
         assertEquals(1L, resultado.getId());
         assertEquals("Perro", resultado.getEspecie());
@@ -94,37 +98,35 @@ public class AvistamientoServiceImplTest {
 
     @Test
     public void testListarRecientes() {
-        // Arrange
+      
         Avistamiento avistamiento1 = new Avistamiento();
         avistamiento1.setId(1L);
         avistamiento1.setEspecie("Perro");
-        avistamiento1.setFechaReporte(LocalDateTime.now().minusDays(1));
+        avistamiento1.setFechaReporte(fechaFija.minusDays(1));
 
         Avistamiento avistamiento2 = new Avistamiento();
         avistamiento2.setId(2L);
         avistamiento2.setEspecie("Gato");
-        avistamiento2.setFechaReporte(LocalDateTime.now());
+        avistamiento2.setFechaReporte(fechaFija);
 
         List<Avistamiento> avistamientos = Arrays.asList(avistamiento2, avistamiento1);
 
         AvistamientoDTO dto1 = new AvistamientoDTO();
         dto1.setId(1L);
         dto1.setEspecie("Perro");
-        dto1.setFechaReporte(LocalDateTime.now().minusDays(1));
+        dto1.setFechaReporte(fechaFija.minusDays(1));
 
         AvistamientoDTO dto2 = new AvistamientoDTO();
         dto2.setId(2L);
         dto2.setEspecie("Gato");
-        dto2.setFechaReporte(LocalDateTime.now());
+        dto2.setFechaReporte(fechaFija);
 
         when(avistamientoRepository.findAllByOrderByFechaReporteDesc()).thenReturn(avistamientos);
         when(modelMapper.map(avistamiento2, AvistamientoDTO.class)).thenReturn(dto2);
         when(modelMapper.map(avistamiento1, AvistamientoDTO.class)).thenReturn(dto1);
 
-        // Act
+       
         List<AvistamientoDTO> resultado = avistamientoService.listarRecientes();
-
-        // Assert
         assertNotNull(resultado);
         assertEquals(2, resultado.size());
         assertEquals("Gato", resultado.get(0).getEspecie());
@@ -134,13 +136,13 @@ public class AvistamientoServiceImplTest {
 
     @Test
     public void testListarRecientesVacio() {
-        // Arrange
+     
         when(avistamientoRepository.findAllByOrderByFechaReporteDesc()).thenReturn(Arrays.asList());
 
-        // Act
+      
         List<AvistamientoDTO> resultado = avistamientoService.listarRecientes();
 
-        // Assert
+       
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty());
         verify(avistamientoRepository, times(1)).findAllByOrderByFechaReporteDesc();

@@ -2,7 +2,6 @@ package com.sanosysalvos.ms_reportes.controller;
 
 import com.sanosysalvos.ms_reportes.dto.AvistamientoDTO;
 import com.sanosysalvos.ms_reportes.service.AvistamientoService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,8 +15,12 @@ import java.util.List;
 @RequestMapping("/api/reportes")
 public class AvistamientoController {
 
-    @Autowired
-    private AvistamientoService avistamientoService;
+    private final AvistamientoService avistamientoService;
+
+    // Inyección por constructor
+    public AvistamientoController(AvistamientoService avistamientoService) {
+        this.avistamientoService = avistamientoService;
+    }
 
     @PostMapping("/avistamiento")
     public ResponseEntity<AvistamientoDTO> crearAvistamiento(@RequestBody AvistamientoDTO dto) {
