@@ -17,19 +17,18 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class UsuarioService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository; // Mantenemos este nombre
+    private final UsuarioRepository usuarioRepository;
+    private final ModelMapper modelMapper;
+    private final RestTemplate restTemplate;
+    private final String mascotasServiceUrl;
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-    @Autowired
-    private ModelMapper modelMapper; // <--- AGREGAR ESTO para quitar los errores de modelMapper
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Value("${mascotas.service.url}")
-    private String mascotasServiceUrl;
-
-    private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    public UsuarioService(UsuarioRepository usuarioRepository, ModelMapper modelMapper, RestTemplate restTemplate, @Value("${mascotas.service.url}") String mascotasServiceUrl) {
+        this.usuarioRepository = usuarioRepository;
+        this.modelMapper = modelMapper;
+        this.restTemplate = restTemplate;
+        this.mascotasServiceUrl = mascotasServiceUrl;
+    }
 
     public UsuarioDTO crearUsuario(UsuarioDTO dto) {
         // 1. Convertimos el DTO a la Entidad
