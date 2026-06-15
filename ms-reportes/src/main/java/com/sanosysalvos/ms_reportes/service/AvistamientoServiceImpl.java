@@ -6,7 +6,6 @@ import com.sanosysalvos.ms_reportes.model.Avistamiento;
 import com.sanosysalvos.ms_reportes.repository.AvistamientoRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,14 +14,18 @@ import java.util.stream.Collectors;
 @Service
 public class AvistamientoServiceImpl implements AvistamientoService {
 
-    @Autowired
-    private AvistamientoRepository avistamientoRepository;
+    private final AvistamientoRepository avistamientoRepository;
+    private final ModelMapper modelMapper;
+    private final RabbitTemplate rabbitTemplate;
 
-    @Autowired
-    private ModelMapper modelMapper;
-
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
+    // Inyección por constructor
+    public AvistamientoServiceImpl(AvistamientoRepository avistamientoRepository, 
+                                   ModelMapper modelMapper, 
+                                   RabbitTemplate rabbitTemplate) {
+        this.avistamientoRepository = avistamientoRepository;
+        this.modelMapper = modelMapper;
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
     @Override
     public AvistamientoDTO crear(AvistamientoDTO dto) {

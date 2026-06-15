@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId; // Importación añadida
 
 @Entity
 @Table(name = "avistamientos")
@@ -31,7 +32,8 @@ public class Avistamiento {
     @PrePersist
     public void prePersist() {
         if (fechaReporte == null) {
-            fechaReporte = LocalDateTime.now();
+            // Uso de ZoneId
+            fechaReporte = LocalDateTime.now(ZoneId.systemDefault());
         }
     }
 }
