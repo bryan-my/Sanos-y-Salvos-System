@@ -12,4 +12,10 @@ public class MatchDTO {
     private Double porcentajeSimilitud;
     private String estado;
     private LocalDateTime fechaMatch;
+    // Alias para compatibilidad con frontend
+    public LocalDateTime getFecha() {
+        return fechaMatch;
+    }
+    private MascotaExternaDTO mascota;
+    private AvistamientoExternoDTO avistamiento;
 }

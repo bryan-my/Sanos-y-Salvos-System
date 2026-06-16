@@ -7,8 +7,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime; // <-- IMPORTANTE AÑADIR ESTE IMPORT
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,5 +45,11 @@ public class UbicacionServiceImpl implements UbicacionService {
                 .stream()
                 .map(u -> modelMapper.map(u, UbicacionDTO.class))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<UbicacionDTO> obtenerUltimaPorMascota(Long idMascota) {
+        return ubicacionRepository.findFirstByIdMascotaOrderByFechaRegistroDesc(idMascota)
+                .map(u -> modelMapper.map(u, UbicacionDTO.class));
     }
 }

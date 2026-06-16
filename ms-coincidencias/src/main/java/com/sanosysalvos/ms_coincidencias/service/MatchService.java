@@ -8,4 +8,5 @@ public interface MatchService {
     MatchDTO crearPendienteDesdeAvistamiento(Long idAvistamiento, Double porcentajeSimilitud);
     List<MatchDTO> listarPendientes();
     MatchDTO actualizarEstado(Long id, String nuevoEstado);
+    void procesarNuevoAvistamiento(Long idAvistamiento);
 }

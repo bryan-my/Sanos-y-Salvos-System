@@ -1,4 +1,9 @@
 services:
+
+  # ══════════════════════════════════════════════
+  #  BASES DE DATOS
+  # ══════════════════════════════════════════════
+
   db-usuarios:
     image: postgres:15
     container_name: db-usuarios
@@ -12,6 +17,11 @@ services:
       - vol-usuarios:/var/lib/postgresql/data
     networks:
       - sanosysalvos-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_sanos -d db_usuarios"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   db-mascotas:
     image: postgres:15
@@ -26,6 +36,11 @@ services:
       - vol-mascotas:/var/lib/postgresql/data
     networks:
       - sanosysalvos-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_sanos -d db_mascotas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   db-geolocalizacion:
     image: postgres:15
@@ -40,6 +55,11 @@ services:
       - vol-geo:/var/lib/postgresql/data
     networks:
       - sanosysalvos-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_sanos -d db_geo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   db-coincidencias:
     image: postgres:15
@@ -54,6 +74,11 @@ services:
       - vol-coincidencias:/var/lib/postgresql/data
     networks:
       - sanosysalvos-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_sanos -d db_coincidencias"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   db-reportes:
     image: postgres:15
@@ -68,17 +93,35 @@ services:
       - vol-reportes:/var/lib/postgresql/data
     networks:
       - sanosysalvos-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_sanos -d db_reportes"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ══════════════════════════════════════════════
+  #  MENSAJERÍA
+  # ══════════════════════════════════════════════
 
   rabbitmq-sanos:
     image: rabbitmq:3-management
     container_name: rabbitmq-sanos
     ports:
-      - "5672:5672"   
-      - "15672:15672" 
+      - "5672:5672"
+      - "15672:15672"
     networks:
       - sanosysalvos-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
-  # --- INFRAESTRUCTURA DE SONARQUBE ---
+  # ══════════════════════════════════════════════
+  #  SONARQUBE (herramienta de análisis de calidad)
+  # ══════════════════════════════════════════════
+
   db-sonarqube:
     image: postgres:16-alpine
     container_name: db-sonarqube
@@ -90,12 +133,18 @@ services:
       - sonar-db-data:/var/lib/postgresql/data
     networks:
       - sanosysalvos-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonar -d sonar"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   sonarqube:
     image: sonarqube:community
     container_name: sonarqube
     depends_on:
-      - db-sonarqube
+      db-sonarqube:
+        condition: service_healthy
     environment:
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar_password_1234
@@ -109,7 +158,10 @@ services:
     networks:
       - sanosysalvos-net
 
-  # --- MICROSERVICIOS ---
+  # ══════════════════════════════════════════════
+  #  MICROSERVICIOS — INFRAESTRUCTURA
+  # ══════════════════════════════════════════════
+
   eurekaserver:
     build: ./eurekaserver
     container_name: eurekaserver
@@ -117,6 +169,14 @@ services:
       - "8761:8761"
     networks:
       - sanosysalvos-net
+    healthcheck:
+      # wget está disponible en eclipse-temurin alpine
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8761/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    restart: on-failure
 
   api-gateway:
     build: ./api-gateway
@@ -124,23 +184,33 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - eurekaserver
+      eurekaserver:
+        condition: service_healthy
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
     networks:
       - sanosysalvos-net
+    restart: on-failure
 
+  # Nota: auth-service corre internamente en el puerto 9000.
+  # El mapeo al host usa 9090 para no colisionar con SonarQube (9000).
   auth-service:
     build: ./auth-service
     container_name: auth-service
     ports:
-      - "9000:9000"
+      - "9090:9000"
     depends_on:
-      - eurekaserver
+      eurekaserver:
+        condition: service_healthy
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
     networks:
       - sanosysalvos-net
+    restart: on-failure
+
+  # ══════════════════════════════════════════════
+  #  MICROSERVICIOS — NEGOCIO
+  # ══════════════════════════════════════════════
 
   ms-usuarios:
     build: ./ms-usuarios
@@ -148,8 +218,10 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - eurekaserver
-      - db-usuarios
+      eurekaserver:
+        condition: service_healthy
+      db-usuarios:
+        condition: service_healthy
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://db-usuarios:5432/db_usuarios
@@ -157,6 +229,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: password123
     networks:
       - sanosysalvos-net
+    restart: on-failure
 
   ms-mascotas:
     build: ./ms_mascotas
@@ -164,8 +237,10 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      - eurekaserver
-      - db-mascotas
+      eurekaserver:
+        condition: service_healthy
+      db-mascotas:
+        condition: service_healthy
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://db-mascotas:5432/db_mascotas
@@ -173,6 +248,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: password123
     networks:
       - sanosysalvos-net
+    restart: on-failure
 
   ms-geolocalizacion:
     build: ./ms-geolocalizacion
@@ -180,8 +256,10 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      - eurekaserver
-      - db-geolocalizacion
+      eurekaserver:
+        condition: service_healthy
+      db-geolocalizacion:
+        condition: service_healthy
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://db-geolocalizacion:5432/db_geo
@@ -189,6 +267,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: password123
     networks:
       - sanosysalvos-net
+    restart: on-failure
 
   ms-coincidencias:
     build: ./ms-coincidencias
@@ -196,9 +275,12 @@ services:
     ports:
       - "8084:8084"
     depends_on:
-      - eurekaserver
-      - db-coincidencias
-      - rabbitmq-sanos
+      eurekaserver:
+        condition: service_healthy
+      db-coincidencias:
+        condition: service_healthy
+      rabbitmq-sanos:
+        condition: service_healthy
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://db-coincidencias:5432/db_coincidencias
@@ -207,6 +289,7 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq-sanos
     networks:
       - sanosysalvos-net
+    restart: on-failure
 
   ms-reportes:
     build: ./ms-reportes
@@ -214,9 +297,12 @@ services:
     ports:
       - "8085:8085"
     depends_on:
-      - eurekaserver
-      - db-reportes
-      - rabbitmq-sanos
+      eurekaserver:
+        condition: service_healthy
+      db-reportes:
+        condition: service_healthy
+      rabbitmq-sanos:
+        condition: service_healthy
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://db-reportes:5432/db_reportes
@@ -225,6 +311,7 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq-sanos
     networks:
       - sanosysalvos-net
+    restart: on-failure
 
 networks:
   sanosysalvos-net:

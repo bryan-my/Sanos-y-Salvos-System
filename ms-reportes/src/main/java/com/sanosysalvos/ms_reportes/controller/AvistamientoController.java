@@ -4,6 +4,7 @@ import com.sanosysalvos.ms_reportes.dto.AvistamientoDTO;
 import com.sanosysalvos.ms_reportes.service.AvistamientoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,11 +25,20 @@ public class AvistamientoController {
 
     @PostMapping("/avistamiento")
     public ResponseEntity<AvistamientoDTO> crearAvistamiento(@RequestBody AvistamientoDTO dto) {
-        return ResponseEntity.ok(avistamientoService.crear(dto));
+        System.out.println("[AvistamientoController] Recibida solicitud para crear avistamiento: " + dto);
+        AvistamientoDTO creado = avistamientoService.crear(dto);
+        System.out.println("[AvistamientoController] Avistamiento creado con ID: " + creado.getId());
+        return ResponseEntity.ok(creado);
     }
 
     @GetMapping("/recientes")
     public ResponseEntity<List<AvistamientoDTO>> listarRecientes() {
         return ResponseEntity.ok(avistamientoService.listarRecientes());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AvistamientoDTO> obtenerPorId(@PathVariable Long id) {
+        System.out.println("[AvistamientoController] Recibida solicitud para avistamiento ID: " + id);
+        return ResponseEntity.ok(avistamientoService.obtenerPorId(id));
     }
 }
