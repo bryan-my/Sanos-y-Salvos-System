@@ -29,31 +29,61 @@ spring:
           uri: lb://MS-USUARIOS # "lb" usa el Load Balancer de Eureka
           predicates:
             - Path=/api/usuarios/** # Todo lo que empiece así se va a Usuarios
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback/default
         
         - id: ms-mascotas
           uri: lb://MS-MASCOTAS # Ruta para el servicio de mascotas
           predicates:
             - Path=/api/mascotas/** # Todo lo que empiece así se va a ms-mascotas
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback/default
         
         - id: auth-service
           uri: lb://AUTH-SERVICE # Ruta para el servicio de autenticación
           predicates:
             - Path=/api/auth/** # Todo lo que empiece así se va al auth-service
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback/default
             
         - id: ms-geolocalizacion
           uri: lb://ms-geolocalizacion
           predicates:
             - Path=/api/geolocalizacion/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback/default
             
         - id: ms-reportes
           uri: lb://ms-reportes
           predicates:
             - Path=/api/reportes/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback/default
             
         - id: ms-coincidencias
           uri: lb://ms-coincidencias
           predicates:
             - Path=/api/coincidencias/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: defaultCircuitBreaker
+                fallbackUri: forward:/fallback/default
 
 eureka:
   client:
