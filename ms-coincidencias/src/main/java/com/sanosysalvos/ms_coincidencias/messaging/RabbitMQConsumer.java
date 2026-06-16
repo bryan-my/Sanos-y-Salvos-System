@@ -16,10 +16,15 @@ public class RabbitMQConsumer {
 
     @RabbitListener(queues = "reportes.queue")
     public void recibirAvistamiento(AvistamientoMensajeDTO mensaje) {
+        System.out.println("[RabbitMQConsumer] ¡Mensaje recibido!");
+        System.out.println("[RabbitMQConsumer] Contenido del mensaje: " + mensaje);
+        
         if (mensaje == null || mensaje.getId() == null) {
+            System.err.println("[RabbitMQConsumer] ERROR: Mensaje o ID son null. Ignorando.");
             return;
         }
 
-        matchService.crearPendienteDesdeAvistamiento(mensaje.getId(), 85.5);
+        System.out.println("[RabbitMQConsumer] Llamando a procesarNuevoAvistamiento con ID: " + mensaje.getId());
+        matchService.procesarNuevoAvistamiento(mensaje.getId());
     }
 }

@@ -2,6 +2,7 @@ package com.sanosysalvos.ms_reportes.service;
 
 import com.sanosysalvos.ms_reportes.config.RabbitMQConfig;
 import com.sanosysalvos.ms_reportes.dto.AvistamientoDTO;
+import com.sanosysalvos.ms_reportes.dto.AvistamientoMensajeDTO;
 import com.sanosysalvos.ms_reportes.exception.ResourceNotFoundException;
 import com.sanosysalvos.ms_reportes.model.Avistamiento;
 import com.sanosysalvos.ms_reportes.repository.AvistamientoRepository;
@@ -30,11 +31,22 @@ public class AvistamientoServiceImpl implements AvistamientoService {
 
     @Override
     public AvistamientoDTO crear(AvistamientoDTO dto) {
+        System.out.println("[AvistamientoServiceImpl] Creando nuevo avistamiento...");
         Avistamiento avistamiento = modelMapper.map(dto, Avistamiento.class);
         Avistamiento guardado = avistamientoRepository.save(avistamiento);
+        System.out.println("[AvistamientoServiceImpl] Avistamiento guardado con ID: " + guardado.getId());
 
         AvistamientoDTO guardadoDto = modelMapper.map(guardado, AvistamientoDTO.class);
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_REPORTE_CREADO, guardadoDto);
+        
+        // Crear mensaje para RabbitMQ
+        AvistamientoMensajeDTO mensaje = new AvistamientoMensajeDTO();
+        mensaje.setId(guardado.getId());
+        mensaje.setEspecie(guardado.getEspecie());
+        mensaje.setDescripcionFisica(guardado.getDescripcionFisica());
+        
+        System.out.println("[AvistamientoServiceImpl] Enviando mensaje a RabbitMQ: " + mensaje);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_REPORTE_CREADO, mensaje);
+        System.out.println("[AvistamientoServiceImpl] Mensaje enviado correctamente!");
 
         return guardadoDto;
     }

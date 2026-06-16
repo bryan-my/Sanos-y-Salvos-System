@@ -13,4 +13,7 @@ public class MascotaExternaDTO {
     private String fotoUrl;
     private String ultimaUbicacion;
     private String descripcion;
+    private Double latitud;
+    private Double longitud;
+    private String estado;
 }

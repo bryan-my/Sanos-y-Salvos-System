@@ -5,8 +5,13 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.List;
+
 @FeignClient(name = "ms-mascotas")
 public interface MascotaClient {
     @GetMapping("/api/mascotas/{id}")
     MascotaExternaDTO obtenerPorId(@PathVariable("id") Long id);
+    
+    @GetMapping("/api/mascotas/lista")
+    List<MascotaExternaDTO> obtenerTodos();
 }

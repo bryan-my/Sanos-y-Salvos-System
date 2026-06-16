@@ -12,4 +12,7 @@ public class AvistamientoExternoDTO {
     private String fotoUrl;
     private Double latitud;
     private Double longitud;
+    private String nombreReportador;
+    private String telefonoContacto;
+    private LocalDateTime fechaReporte;
 }

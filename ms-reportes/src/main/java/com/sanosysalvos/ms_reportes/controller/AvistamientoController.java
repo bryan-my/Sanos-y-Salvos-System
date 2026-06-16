@@ -25,7 +25,10 @@ public class AvistamientoController {
 
     @PostMapping("/avistamiento")
     public ResponseEntity<AvistamientoDTO> crearAvistamiento(@RequestBody AvistamientoDTO dto) {
-        return ResponseEntity.ok(avistamientoService.crear(dto));
+        System.out.println("[AvistamientoController] Recibida solicitud para crear avistamiento: " + dto);
+        AvistamientoDTO creado = avistamientoService.crear(dto);
+        System.out.println("[AvistamientoController] Avistamiento creado con ID: " + creado.getId());
+        return ResponseEntity.ok(creado);
     }
 
     @GetMapping("/recientes")
@@ -35,6 +38,7 @@ public class AvistamientoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<AvistamientoDTO> obtenerPorId(@PathVariable Long id) {
+        System.out.println("[AvistamientoController] Recibida solicitud para avistamiento ID: " + id);
         return ResponseEntity.ok(avistamientoService.obtenerPorId(id));
     }
 }

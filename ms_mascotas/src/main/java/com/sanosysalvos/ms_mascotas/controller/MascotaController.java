@@ -21,16 +21,23 @@ public class MascotaController {
 
     @PostMapping
     public ResponseEntity<MascotaDTO> crearMascota(@RequestBody MascotaDTO mascotaDTO) {
-        return ResponseEntity.ok(mascotaService.crearMascota(mascotaDTO));
+        System.out.println("[MascotaController] Recibida solicitud para crear mascota: " + mascotaDTO);
+        MascotaDTO creada = mascotaService.crearMascota(mascotaDTO);
+        System.out.println("[MascotaController] Mascota creada con ID: " + creada.getId());
+        return ResponseEntity.ok(creada);
     }
 
     @GetMapping("/lista")
     public ResponseEntity<List<MascotaDTO>> listarTodos() {
-        return ResponseEntity.ok(mascotaService.obtenerTodos());
+        System.out.println("[MascotaController] Recibida solicitud para listar todas las mascotas");
+        List<MascotaDTO> mascotas = mascotaService.obtenerTodos();
+        System.out.println("[MascotaController] Mascotas encontradas: " + mascotas.size());
+        return ResponseEntity.ok(mascotas);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<MascotaDTO> obtenerPorId(@PathVariable Long id) {
+        System.out.println("[MascotaController] Recibida solicitud para mascota ID: " + id);
         return ResponseEntity.ok(mascotaService.obtenerPorId(id));
     }
 
