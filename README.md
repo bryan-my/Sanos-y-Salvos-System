@@ -1,196 +1,231 @@
-# Sanos y Salvos System
+# 🐾 Sanos y Salvos — Backend
 
-Sistema basado en microservicios (Spring Boot + Spring Cloud) para gestionar usuarios y mascotas, con descubrimiento de servicios (Eureka) y un API Gateway como punto de entrada.
+Sistema distribuido de microservicios para la **búsqueda, registro y coincidencia de mascotas perdidas**. Permite a ciudadanos reportar avistamientos y al sistema calcular automáticamente si coinciden geográficamente con una mascota perdida usando el **algoritmo de Haversine**.
 
-## Qué hay en este repo
+---
 
-- `eurekaserver/`: servidor de descubrimiento (Eureka).
-- `api-gateway/`: gateway de entrada (Spring Cloud Gateway) + validación JWT + CORS.
-- `auth-service/`: autenticación (login) + emisión de JWT.
-- `ms-usuarios/`: CRUD básico de usuarios (PostgreSQL) + lookup por email para login.
-- `ms_mascotas/`: CRUD básico de mascotas (PostgreSQL).
-- `infrastructure/docker-compose.yml`: Postgres para bases de datos locales (por servicio).
-- `docs/`: entregables/documentación del proyecto (docx/pptx).
+## 🏗️ Arquitectura General
 
-## Arquitectura (alto nivel)
+```
+                        ┌─────────────────────────────┐
+  Cliente / Frontend ──▶│     API Gateway :8080        │
+                        │  Spring Cloud Gateway + JWT  │
+                        └──────────────┬──────────────┘
+                                       │ lb:// (Eureka)
+              ┌────────────────────────┼────────────────────────┐
+              ▼                        ▼                        ▼
+     ┌──────────────┐       ┌──────────────────┐     ┌──────────────────┐
+     │ auth-service │       │   ms-usuarios    │     │   ms-mascotas    │
+     │    :9000     │       │     :8081        │     │     :8082        │
+     └──────────────┘       └──────────────────┘     └──────────────────┘
+              ▼                        ▼                        ▼
+     ┌──────────────────┐   ┌──────────────────┐     ┌──────────────────┐
+     │ ms-geolocalizacion│  │   ms-reportes    │     │ ms-coincidencias │
+     │     :8083        │  │     :8085        │     │     :8084        │
+     └──────────────────┘   └──────────────────┘     └──────────────────┘
+              │                        │  RabbitMQ             │
+              └────────────────────────┴───────────────────────┘
+                                       │
+                          ┌────────────▼───────────┐
+                          │   Eureka Server :8761   │
+                          │  Registro de servicios  │
+                          └────────────────────────┘
+```
 
-- **Eureka Server** (puerto `8761`) mantiene el registro de instancias.
-- **Microservicios** (`ms-usuarios`, `ms-mascotas`, `auth-service`) se registran en Eureka como clientes.
-- **API Gateway** (puerto `8080`) enruta por path hacia cada servicio usando `lb://` (load balancer vía Eureka) y valida JWT para endpoints protegidos.
+### Componentes clave
 
-## Servicios y puertos
+| Componente | Rol |
+|---|---|
+| **API Gateway** | Punto de entrada único. Valida JWT, enruta por path, aplica Circuit Breaker (Resilience4j) |
+| **Eureka Server** | Registro y descubrimiento de servicios. Los microservicios se registran y se localizan por nombre |
+| **auth-service** | Emite tokens JWT firmados con HS256. Valida credenciales consultando ms-usuarios vía OpenFeign |
+| **ms-usuarios** | CRUD de usuarios. Encriptación de contraseñas con BCrypt |
+| **ms-mascotas** | CRUD de mascotas. Gestión de estados: `PERDIDA`, `EN_CASA`, `ENCONTRADA` |
+| **ms-geolocalizacion** | Almacena coordenadas (lat/lng) separadas de la mascota. Provee la última ubicación conocida |
+| **ms-reportes** | Registra avistamientos ciudadanos. Publica eventos en RabbitMQ al crear un reporte |
+| **ms-coincidencias** | Motor espacial. Consume eventos de RabbitMQ, calcula Haversine y genera matches |
 
-| Componente | Carpeta | Puerto | Nombre en Eureka / `spring.application.name` |
-|---|---:|---:|---|
-| Eureka Server | `eurekaserver/` | `8761` | `eureka-server` |
-| API Gateway | `api-gateway/` | `8080` | `api-gateway` |
-| Auth Service | `auth-service/` | `9000` | `auth-service` |
-| MS Usuarios | `ms-usuarios/` | `8081` | `ms-usuarios` |
-| MS Mascotas | `ms_mascotas/` | `8082` | `ms-mascotas` |
+---
 
-## Infra (PostgreSQL local)
+## ⚙️ Tecnologías
 
-El compose vive en [docker-compose.yml](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/infrastructure/docker-compose.yml) y levanta 4 bases:
+- **Java 17**
+- **Spring Boot 4.0.6**
+- **Spring Cloud 2025.1.1** — Gateway, Eureka, OpenFeign
+- **Spring Security** — JWT (HS256) como OAuth2 Resource Server
+- **PostgreSQL 15** — base de datos independiente por microservicio
+- **RabbitMQ 3** — mensajería asíncrona entre ms-reportes y ms-coincidencias
+- **Resilience4j** — Circuit Breaker en el API Gateway con fallback controlado
+- **Docker + Docker Compose** — contenedores con multi-stage build (Maven → JRE)
+- **SonarQube** — análisis estático de calidad de código
 
-- `db-usuarios` en `localhost:5433` (DB: `db_usuarios`)
-- `db-mascotas` en `localhost:5434` (DB: `db_mascotas`)
-- `db-geolocalizacion` en `localhost:5435` (DB: `db_geo`)
-- `db-coincidencias` en `localhost:5436` (DB: `db_coincidencias`)
+---
 
-En el estado actual del repo, **solo** `ms-usuarios` y `ms-mascotas` están configurados para usar las bases `db_usuarios` y `db_mascotas`.
+## 🌐 Tabla de Servicios y Puertos
 
-## Configuración (local)
+| Servicio | Puerto interno | Puerto BD (host) | Base de datos |
+|---|:---:|:---:|---|
+| Eureka Server | `8761` | — | — |
+| API Gateway | `8080` | — | — |
+| auth-service | `9000` | — | — |
+| ms-usuarios | `8081` | `5433` | `db_usuarios` |
+| ms-mascotas | `8082` | `5434` | `db_mascotas` |
+| ms-geolocalizacion | `8083` | `5435` | `db_geo` |
+| ms-coincidencias | `8084` | `5436` | `db_coincidencias` |
+| ms-reportes | `8085` | `5437` | `db_reportes` |
+| RabbitMQ | `5672` / `15672` | — | — |
+| SonarQube | `9000` (host: `9000`) | — | — |
 
-Cada servicio tiene su propio `application.properties`/`application.yml`:
+> ⚠️ **Nota:** `auth-service` corre en el puerto interno `9000` del contenedor. En `docker-compose.yml` se mapea al host como `9090:9000` para no colisionar con SonarQube.
 
-- Gateway: [application.yml](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/api-gateway/src/main/resources/application.yml)
-- Auth: [application.properties](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/auth-service/src/main/resources/application.properties)
-- Usuarios: [application.properties](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/ms-usuarios/src/main/resources/application.properties)
-- Mascotas: [application.properties](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/ms_mascotas/src/main/resources/application.properties)
-- Eureka: [application.properties](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/eurekaserver/src/main/resources/application.properties)
+---
 
-Variables importantes (valores por defecto en los archivos de config):
+## 🧠 Motor de Coincidencias Espaciales
 
-- **Eureka**: `eureka.client.service-url.defaultZone=http://localhost:8761/eureka/`
-- **DB Usuarios**: `spring.datasource.url=jdbc:postgresql://localhost:5433/db_usuarios`
-- **DB Mascotas**: `spring.datasource.url=jdbc:postgresql://localhost:5434/db_mascotas`
-- **Inter-servicio (Usuarios → Mascotas)**: `mascotas.service.url=http://localhost:8082`
-- **JWT secret**: `jwt.secret=...` (misma clave en gateway/auth/mascotas)
+El microservicio `ms-coincidencias` implementa el **algoritmo de Haversine** para calcular la distancia en kilómetros entre dos coordenadas geográficas sobre la superficie terrestre:
 
-Nota: el secret JWT está versionado en este repo. Para un uso real, conviene reemplazarlo/inyectarlo por variables de entorno (por ejemplo `JWT_SECRET`) y no commitearlo.
+```
+d = 2r · arcsin(√( sin²(Δlat/2) + cos(lat₁)·cos(lat₂)·sin²(Δlon/2) ))
+```
 
-## Seguridad y JWT
+**Flujo completo:**
 
-- El token se emite en `auth-service` vía [JwtProvider](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/auth-service/src/main/java/com/sanosysalvos/auth_service/security/JwtProvider.java) con algoritmo `HS256` y expiración de **1 hora**.
-- El gateway valida el token como **Resource Server JWT** en [SecurityConfig](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/api-gateway/src/main/java/com/sanosysalvos/api_gateway/config/SecurityConfig.java).
+```
+1. Usuario reporta avistamiento (ms-reportes)
+         │
+         ▼
+2. ms-reportes publica mensaje en RabbitMQ [reportes.queue]
+         │
+         ▼
+3. ms-coincidencias consume el evento
+         │
+         ▼
+4. Consulta coordenadas de mascotas PERDIDAS → ms-geolocalizacion (OpenFeign síncrono)
+         │
+         ▼
+5. Aplica Haversine: si distancia ≤ 10 km → genera Match (PENDIENTE)
+         │
+         ▼
+6. Porcentaje de similitud = 100 - (distancia × 5), rango [0, 100]
+```
 
-Endpoints públicos en el gateway (sin token):
+---
 
-- `POST /api/usuarios/registro`
-- `POST /api/auth/**`
-- `GET /api/mascotas/lista`
-- `GET /api/mascotas/*` (por id)
+## 🔐 Seguridad
 
-El resto requiere:
+- Tokens JWT emitidos por `auth-service`, firmados con `HS256`, expiración: **1 hora**
+- El API Gateway actúa como **OAuth2 Resource Server** y valida el token en cada petición
+- **Circuit Breaker** en todas las rutas: si un microservicio falla, el gateway responde con `503` y un mensaje JSON controlado (sin errores en cadena)
 
-- Header `Authorization: Bearer <token>`
+**Endpoints públicos** (no requieren token):
 
-### CORS
+```
+POST /api/auth/login
+POST /api/usuarios/registro
+GET  /api/mascotas/lista
+GET  /api/mascotas/{id}
+GET  /api/geolocalizacion/mapa
+POST /api/reportes/avistamiento
+GET  /api/reportes/recientes
+```
 
-El gateway habilita CORS para `http://localhost:3000` (típico frontend local). Ver [SecurityConfig](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/api-gateway/src/main/java/com/sanosysalvos/api_gateway/config/SecurityConfig.java).
+---
 
-## Ruteo por el Gateway
+## 🚀 Instrucciones de Ejecución
 
-Configurado en [application.yml](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/api-gateway/src/main/resources/application.yml):
+### Prerrequisitos
 
-- `/api/usuarios/**` → `lb://MS-USUARIOS`
-- `/api/mascotas/**` → `lb://MS-MASCOTAS`
-- `/api/auth/**` → `lb://AUTH-SERVICE`
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado y corriendo
+- No se requiere Java ni Maven instalados localmente — el build ocurre **dentro de Docker**
 
-## Flujo de trabajo (runtime)
+### ▶️ Levantar todo el sistema (recomendado)
 
-### 1) Registro de usuario
-
-El cliente llama al gateway:
-
-- `POST /api/usuarios/registro`
-
-El gateway lo deja pasar sin JWT y lo enruta a `ms-usuarios`, que guarda el usuario en Postgres.
-
-Endpoints del MS Usuarios:
-
-- `POST /api/usuarios/registro`
-- `GET /api/usuarios/lista`
-- `GET /api/usuarios/search?email=...`
-- `DELETE /api/usuarios/{id}` (además intenta borrar mascotas del usuario llamando a `ms-mascotas`)
-
-Código: [UsuarioController](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/ms-usuarios/src/main/java/com/sanosysalvos/ms_usuarios/controller/UsuarioController.java)
-
-### 2) Login y emisión del token
-
-El cliente llama al gateway:
-
-- `POST /api/auth/login`
-
-`auth-service` busca al usuario por email llamando a `ms-usuarios` vía Feign y, si la contraseña matchea, devuelve un token JWT.
-
-Código:
-
-- [AuthController](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/auth-service/src/main/java/com/sanosysalvos/auth_service/controller/AuthController.java)
-- [UserFeignClient](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/auth-service/src/main/java/com/sanosysalvos/auth_service/feign/UserFeignClient.java)
-- [AuthService](file:///c:/Users/Mystic/Desktop/Nueva%20carpeta/Sanos-y-Salvos-System/auth-service/src/main/java/com/sanosysalvos/auth_service/service/AuthService.java)
-
-### 3) Consumo de recursos protegidos
-
-Para crear/editar/borrar recursos (por ejemplo mascotas), se usa el token en `Authorization: Bearer ...` contra el gateway. El gateway valida el token y enruta al microservicio.
-
-## Cómo levantar todo en local
-
-Prerequisitos:
-
-- Java 17 (los `pom.xml` declaran `java.version=17`)
-- Docker Desktop (para Postgres)
-
-### 1) Levantar bases de datos
-
-Desde la raíz del repo:
+Desde la carpeta `Sanos-y-Salvos-System/`:
 
 ```bash
-docker compose -f infrastructure/docker-compose.yml up -d
+docker compose up --build -d
 ```
 
-En Windows (PowerShell) también podés usar:
+> La primera vez descarga las imágenes base y compila todos los microservicios (~5-10 min).  
+> Las siguientes veces, si solo cambió código fuente (no el `pom.xml`), el caché de Maven acelera el proceso significativamente.
 
-```powershell
-docker compose -f .\infrastructure\docker-compose.yml up -d
-```
-
-### 2) Levantar Eureka
-
-En `eurekaserver/`:
+### ♻️ Actualizar un microservicio tras cambios
 
 ```bash
-./mvnw spring-boot:run
+# Reconstruir y reiniciar solo el servicio modificado
+docker compose up --build ms-coincidencias
+
+# Ver logs en tiempo real
+docker compose logs -f ms-coincidencias
 ```
 
-En Windows (PowerShell):
-
-```powershell
-.\mvnw.cmd spring-boot:run
-```
-
-Dashboard:
-
-- http://localhost:8761
-
-### 3) Levantar microservicios
-
-En cada carpeta (en este orden recomendado):
+### ⏹️ Detener todo
 
 ```bash
-# ms-usuarios (8081)
-cd ms-usuarios
-./mvnw spring-boot:run
+docker compose down
 ```
+
+### 🗑️ Liberar espacio en disco (caché de Docker)
 
 ```bash
-# ms_mascotas (8082)
-cd ms_mascotas
-./mvnw spring-boot:run
+# Elimina capas huérfanas y caché de build (NO borra las BDs)
+docker system prune -f
+docker builder prune -f
 ```
+
+---
+
+## 🗄️ Gestión de Bases de Datos
+
+Conectar a una base de datos específica:
 
 ```bash
-# auth-service (9000)
-cd auth-service
-./mvnw spring-boot:run
+docker exec -it db-mascotas psql -U user_sanos -d db_mascotas
 ```
 
-En Windows (PowerShell), el equivalente es `.\mvnw.cmd spring-boot:run`.
+Limpiar datos para demo:
 
-### 4) Levantar el Gateway
-
-En `api-gateway/` (8080):
-
-```bash
-./mvnw spring-boot:run
+```sql
+-- Ejecutar en cada BD en este orden:
+-- 1. db_coincidencias
+TRUNCATE TABLE matches RESTART IDENTITY;
+-- 2. db_geo
+TRUNCATE TABLE ubicaciones RESTART IDENTITY;
+-- 3. db_mascotas
+TRUNCATE TABLE mascotas RESTART IDENTITY;
+-- 4. db_reportes
+TRUNCATE TABLE avistamientos RESTART IDENTITY;
 ```
+
+---
+
+## 📁 Estructura del Repositorio
+
+```
+Sanos-y-Salvos-System/
+├── api-gateway/          # Enrutamiento, JWT, Circuit Breaker
+├── auth-service/         # Login + emisión de JWT
+├── eurekaserver/         # Registro de servicios
+├── ms-usuarios/          # CRUD usuarios + BCrypt
+├── ms_mascotas/          # CRUD mascotas + estados
+├── ms-geolocalizacion/   # Coordenadas lat/lng por mascota
+├── ms-reportes/          # Avistamientos + publicación RabbitMQ
+├── ms-coincidencias/     # Motor Haversine + matches
+└── docker-compose.yml    # Orquestación completa
+```
+
+---
+
+## 📊 Calidad de Código (SonarQube)
+
+El análisis de calidad se ejecuta con SonarQube Community Edition (incluido en `docker-compose.yml`).  
+Panel disponible en: **http://localhost:9000**
+
+| Microservicio | Cobertura de pruebas |
+|---|:---:|
+| ms-usuarios | 81.3% |
+| ms-reportes | 73.7% |
+| ms-mascotas | 70.0% |
+| ms-coincidencias | 68.9% |
+
+El ecosistema completo supera los **Quality Gates** sin vulnerabilidades ni Security Hotspots.
