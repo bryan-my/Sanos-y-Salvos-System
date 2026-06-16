@@ -1,0 +1,372 @@
+{
+  "info": {
+    "_postman_id": "e913d982-8122-4399-bb8c-c5ca0c10467b",
+    "name": "Sanos y Salvos API - Entrega Final",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54206927",
+    "_collection_link": "https://go.postman.co/collection/54206927-e913d982-8122-4399-bb8c-c5ca0c10467b?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth service",
+      "item": [
+        {
+          "name": "Auth Service",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"admin@sanosysalvos.cl\",\r\n  \"password\": \"Admin123!\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ms usuarios",
+      "item": [
+        {
+          "name": "Usuarios lista",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "MS-USUARIOS",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombreCompleto\": \"María González\",\r\n  \"email\": \"maria12@ejemplo.cl\",\r\n  \"password\": \"Test123!\",\r\n  \"rol\": \"DUEÑO\",\r\n  \"telefono\": \"+56912345678\",\r\n  \"direccion\": \"Providencia, Santiago\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/usuarios/registro",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "usuarios",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ms Mascotas",
+      "item": [
+        {
+          "name": "Obtener mascota por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/mascotas/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "mascotas",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar mascotas perdidas",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/mascotas/estado/PERDIDA",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "mascotas",
+                "estado",
+                "PERDIDA"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar Mascota",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Luna\",\r\n  \"especie\": \"Gato\",\r\n  \"raza\": \"Siamés\",\r\n  \"color\": \"Blanco y café\",\r\n  \"tamaño\": \"Pequeño\",\r\n  \"estado\": \"PERDIDA\",\r\n  \"ultimaUbicacion\": \"Providencia, Santiago\",\r\n  \"descripcion\": \"Gata doméstica con collar rosado\",\r\n  \"idUsuario\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/mascotas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "mascotas"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ms Geolocalizacion",
+      "item": [
+        {
+          "name": "Registrar ubicacion",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"idMascota\": 1,\r\n  \"latitud\": -33.4372,\r\n  \"longitud\": -70.6313,\r\n  \"descripcionLugar\": \"Parque Bustamante, Providencia\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/geolocalizacion/registrar",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "geolocalizacion",
+                "registrar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ultima ubicacion",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/geolocalizacion/mascota/1/ultima",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "geolocalizacion",
+                "mascota",
+                "1",
+                "ultima"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver mapa",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ms Coincidencias",
+      "item": [
+        {
+          "name": "Ver coincidencias pendientes",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Todos los matches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/coincidencias/debug/all",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "coincidencias",
+                "debug",
+                "all"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Aprobar coincidencia",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/coincidencias/1/estado?nuevoEstado=APROBADO",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "coincidencias",
+                "1",
+                "estado"
+              ],
+              "query": [
+                {
+                  "key": "nuevoEstado",
+                  "value": "APROBADO"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Descartar una coincidencia",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/coincidencias/1/estado?nuevoEstado=DESCARTADO",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "coincidencias",
+                "1",
+                "estado"
+              ],
+              "query": [
+                {
+                  "key": "nuevoEstado",
+                  "value": "DESCARTADO"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
