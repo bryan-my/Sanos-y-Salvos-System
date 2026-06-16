@@ -17,11 +17,13 @@ public class MatchServiceImpl implements MatchService {
     private static final String ESTADO_APROBADO = "APROBADO";
     private static final String ESTADO_DESCARTADO = "DESCARTADO";
 
-    @Autowired
-    private MatchRepository matchRepository;
+    private final MatchRepository matchRepository;
+    private final ModelMapper modelMapper;
 
-    @Autowired
-    private ModelMapper modelMapper;
+    public MatchServiceImpl(MatchRepository matchRepository, ModelMapper modelMapper) {
+        this.matchRepository = matchRepository;
+        this.modelMapper = modelMapper;
+    }
 
     @Override
     public MatchDTO crearPendienteDesdeAvistamiento(Long idAvistamiento, Double porcentajeSimilitud) {
