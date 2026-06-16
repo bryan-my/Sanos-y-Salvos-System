@@ -1,10 +1,13 @@
 package com.sanosysalvos.ms_coincidencias.service;
 
+import com.sanosysalvos.ms_coincidencias.client.AvistamientoClient;
+import com.sanosysalvos.ms_coincidencias.client.MascotaClient;
+import com.sanosysalvos.ms_coincidencias.dto.AvistamientoExternoDTO;
+import com.sanosysalvos.ms_coincidencias.dto.MascotaExternaDTO;
 import com.sanosysalvos.ms_coincidencias.dto.MatchDTO;
 import com.sanosysalvos.ms_coincidencias.model.Match;
 import com.sanosysalvos.ms_coincidencias.repository.MatchRepository;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,10 +22,44 @@ public class MatchServiceImpl implements MatchService {
 
     private final MatchRepository matchRepository;
     private final ModelMapper modelMapper;
+    private final MascotaClient mascotaClient;
+    private final AvistamientoClient avistamientoClient;
 
-    public MatchServiceImpl(MatchRepository matchRepository, ModelMapper modelMapper) {
+    public MatchServiceImpl(MatchRepository matchRepository, ModelMapper modelMapper, MascotaClient mascotaClient, AvistamientoClient avistamientoClient) {
         this.matchRepository = matchRepository;
         this.modelMapper = modelMapper;
+        this.mascotaClient = mascotaClient;
+        this.avistamientoClient = avistamientoClient;
+    }
+
+    private MatchDTO enrichMatchDTO(MatchDTO matchDTO) {
+        if (matchDTO.getIdMascotaPerdida() != null) {
+            try {
+                System.out.println("Calling MascotaClient for ID: " + matchDTO.getIdMascotaPerdida());
+                MascotaExternaDTO mascota = mascotaClient.obtenerPorId(matchDTO.getIdMascotaPerdida());
+                System.out.println("Got Mascota: " + mascota);
+                matchDTO.setMascota(mascota);
+            } catch (Exception e) {
+                System.err.println("Error Feign Mascota ID " + matchDTO.getIdMascotaPerdida() + ": " + e.getMessage());
+                e.printStackTrace();
+                matchDTO.setMascota(null);
+            }
+        }
+
+        if (matchDTO.getIdAvistamiento() != null) {
+            try {
+                System.out.println("Calling AvistamientoClient for ID: " + matchDTO.getIdAvistamiento());
+                AvistamientoExternoDTO avistamiento = avistamientoClient.obtenerPorId(matchDTO.getIdAvistamiento());
+                System.out.println("Got Avistamiento: " + avistamiento);
+                matchDTO.setAvistamiento(avistamiento);
+            } catch (Exception e) {
+                System.err.println("Error Feign Avistamiento ID " + matchDTO.getIdAvistamiento() + ": " + e.getMessage());
+                e.printStackTrace();
+                matchDTO.setAvistamiento(null);
+            }
+        }
+
+        return matchDTO;
     }
 
     @Override
@@ -33,7 +70,8 @@ public class MatchServiceImpl implements MatchService {
         match.setEstado(ESTADO_PENDIENTE);
 
         Match guardado = matchRepository.save(match);
-        return modelMapper.map(guardado, MatchDTO.class);
+        MatchDTO matchDTO = modelMapper.map(guardado, MatchDTO.class);
+        return enrichMatchDTO(matchDTO);
     }
 
     @Override
@@ -41,6 +79,7 @@ public class MatchServiceImpl implements MatchService {
         return matchRepository.findByEstadoOrderByFechaMatchDesc(ESTADO_PENDIENTE)
                 .stream()
                 .map(m -> modelMapper.map(m, MatchDTO.class))
+                .map(this::enrichMatchDTO)
                 .collect(Collectors.toList());
     }
 
@@ -54,6 +93,7 @@ public class MatchServiceImpl implements MatchService {
         Match match = matchRepository.findById(id).orElseThrow();
         match.setEstado(estadoNormalizado);
         Match guardado = matchRepository.save(match);
-        return modelMapper.map(guardado, MatchDTO.class);
+        MatchDTO matchDTO = modelMapper.map(guardado, MatchDTO.class);
+        return enrichMatchDTO(matchDTO);
     }
 }

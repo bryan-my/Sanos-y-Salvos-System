@@ -7,4 +7,5 @@ import java.util.List;
 public interface AvistamientoService {
     AvistamientoDTO crear(AvistamientoDTO dto);
     List<AvistamientoDTO> listarRecientes();
+    AvistamientoDTO obtenerPorId(Long id);
 }

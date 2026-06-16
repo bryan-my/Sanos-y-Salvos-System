@@ -2,6 +2,7 @@ package com.sanosysalvos.ms_reportes.service;
 
 import com.sanosysalvos.ms_reportes.config.RabbitMQConfig;
 import com.sanosysalvos.ms_reportes.dto.AvistamientoDTO;
+import com.sanosysalvos.ms_reportes.exception.ResourceNotFoundException;
 import com.sanosysalvos.ms_reportes.model.Avistamiento;
 import com.sanosysalvos.ms_reportes.repository.AvistamientoRepository;
 import org.modelmapper.ModelMapper;
@@ -44,5 +45,12 @@ public class AvistamientoServiceImpl implements AvistamientoService {
                 .stream()
                 .map(a -> modelMapper.map(a, AvistamientoDTO.class))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public AvistamientoDTO obtenerPorId(Long id) {
+        Avistamiento avistamiento = avistamientoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Avistamiento no encontrado con id: " + id));
+        return modelMapper.map(avistamiento, AvistamientoDTO.class);
     }
 }

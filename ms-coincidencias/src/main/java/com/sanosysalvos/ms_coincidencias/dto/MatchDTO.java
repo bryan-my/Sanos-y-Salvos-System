@@ -12,4 +12,6 @@ public class MatchDTO {
     private Double porcentajeSimilitud;
     private String estado;
     private LocalDateTime fechaMatch;
+    private MascotaExternaDTO mascota;
+    private AvistamientoExternoDTO avistamiento;
 }
